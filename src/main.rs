@@ -3,7 +3,8 @@
 
 use clap::{Args, Parser, Subcommand};
 use yuyan_torrent::bencode::BItem;
-use yuyan_torrent::client;
+use yuyan_torrent::client::Client;
+use yuyan_torrent::{client, tracker};
 use yuyan_torrent::metainfo::MetaInfo;
 use std::fs::read;
 
@@ -18,7 +19,7 @@ struct Cli {
 
     #[arg(short, long)]
     bencode: bool,
-
+    
     file: String,
 
     dst: Option<String>,
@@ -26,8 +27,7 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // todo: log setup
-    // https://docs.rs/tracing
+    tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
     if cli.read {
@@ -39,10 +39,10 @@ async fn main() -> anyhow::Result<()> {
         let bencode = BItem::deseri_cons(&bytes)?;
         println!("{}", &bencode);
     }
-
     if cli.download {
         download(&cli.file, &cli.dst.unwrap_or(".".to_string())).await?;
     }
+
     Ok(())
 }
 

@@ -1,7 +1,6 @@
 //! Metainfo File Structure (.torrent file)r
 
 use crate::bencode::{BDict, BItem};
-use futures::SinkExt;
 use sha1::{Digest, Sha1};
 use std::fmt::{self, Display};
 use std::fs::read;
@@ -43,34 +42,16 @@ pub struct File {
     paths: Vec<String>,
 }
 
-pub struct TrackerIterator<'a> {
-    metainfo: &'a MetaInfo,
-    ptr: usize,
-}
-
-impl<'a> Iterator for TrackerIterator<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.ptr += 1;
-        if self.ptr - 1 == 0 {
-            Some(&self.metainfo.announce)
-        } else {
-            self.metainfo
-                .announce_list
-                .as_ref()
-                .and_then(|ans| ans.get(self.ptr - 2))
-                .map(|x| x.as_str())
-        }
-    }
-}
-
 impl MetaInfo {
-    pub fn trackers(&self) -> TrackerIterator {
-        TrackerIterator {
-            metainfo: self,
-            ptr: 0,
+    pub fn trackers(&self) -> Vec<&str> {
+        let mut trackers = vec![self.announce.as_str()];
+        if let Some(trackers_) = &self.announce_list {
+            for tracker in trackers_ {
+                trackers.push(tracker.as_str());
+            }
         }
+        trackers.dedup();
+        trackers
     }
 }
 
@@ -145,7 +126,7 @@ fn to_escape_hex(bytes: &[u8]) -> String {
             if b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_' | b'~') {
                 String::from_utf8([*b].to_vec()).unwrap()
             } else {
-                format!("%{:x}", b)
+                format!("%{:02x}", b)
             }
         })
         .collect()
@@ -168,14 +149,17 @@ impl MetaInfo {
         let announce = bdict.remove::<String>("announce")?;
 
         let announce_list = bdict
-            .remove::<Vec<BItem>>("announce-list")?
-            .into_iter()
-            .map(|x| Vec::<BItem>::try_from(x).ok())
-            .collect::<Option<Vec<Vec<BItem>>>>()
+            .remove::<Vec<BItem>>("announce-list")
+            .ok()
             .and_then(|a| {
                 a.into_iter()
-                    .flat_map(|x| x.into_iter().map(|x| String::try_from(x).ok()))
-                    .collect::<Option<Vec<String>>>()
+                    .map(|b| Vec::<BItem>::try_from(b).ok())
+                    .collect::<Option<Vec<Vec<BItem>>>>()
+                    .and_then(|c| {
+                        c.into_iter()
+                            .flat_map(|d| d.into_iter().map(|d| String::try_from(d).ok()))
+                            .collect::<Option<Vec<String>>>()
+                    })
             });
 
         let creation_date = bdict.remove::<String>("creation date").ok();
