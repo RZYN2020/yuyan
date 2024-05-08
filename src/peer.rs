@@ -17,25 +17,26 @@ struct Peer {
 }
 
 impl Peer {
-    // pub fn new(addr: String) -> Self {
-    //     let mut stream = TcpStream::connect(addr).await.unwrap();
-    //     Peer {
-    //         am_choking: true,
-    //         am_interested: false,
-    //         peer_choking: true,
-    //         peer_interested: false,
-    //         stream,
-    //     }
-    // }
-
-    async fn send(msg: Message) -> anyhow::Result<()> {
-        unimplemented!()
-    }
-    async fn sends(msgs: Vec<Message>) -> anyhow::Result<()> {
-        unimplemented!()
+    pub async fn new(addr: String, size: usize) -> Self {
+        let stream = TcpStream::connect(addr).await.unwrap();
+        Peer {
+            am_choking: true,
+            am_interested: false,
+            peer_choking: true,
+            peer_interested: false,
+            bitfields: Bitmap::new(size),
+            stream,
+        }
     }
 
-    async fn recv() -> anyhow::Result<Vec<Message>> {
+    async fn send(&self, msg: Message) -> anyhow::Result<()> {
+        unimplemented!()
+    }
+    async fn sends(&self, msgs: Vec<Message>) -> anyhow::Result<()> {
+        unimplemented!()
+    }
+
+    async fn recv(&self) -> anyhow::Result<Vec<Message>> {
         unimplemented!()
     }
 }
@@ -63,13 +64,13 @@ pub async fn run(
 ) {
     info!("running peer: {}", addr.to_string());
 
-    // let peer = Peer::new();
+    let peer = Peer::new(addr, client.bit_fields.lock().await.size()).await;
 
     // todo: drop permit when existing
 
     let handshake = Message::HandShake;
 
-    // peer.send(handshake).await;
+    peer.send(handshake).await;
 
     // for msg in peer.recv().await {
         // build bitmap
@@ -77,9 +78,7 @@ pub async fn run(
         // match Bitfield/Have/Have All ...
     // }
 
-
     // send Interesting
-
     // loop:
     //    1. retrive piece id
     //    2. check if have have 
@@ -87,4 +86,6 @@ pub async fn run(
     //      yes -> request
     //    3. receive piece
     //    4. put it into data channel
+
+    drop(permit);
 }
