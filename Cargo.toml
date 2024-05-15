@@ -10,8 +10,8 @@ name = "yuyan_torrent"
 path = "src/lib.rs"
 
 [[bin]]
-name = "yuyan"
-path = "src/main.rs"
+name = "yuyan_client"
+path = "examples/main.rs"
 
 
 [dependencies]

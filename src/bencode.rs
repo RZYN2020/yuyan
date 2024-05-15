@@ -1,4 +1,12 @@
 //! bencode decode/encode
+//! 
+//! Most messges transmitted by peers are encoded in bencode format. 
+//! The mod provide the bencode data strucutres and functions
+//! to convert between bencode data strucutres and byte stream.
+//! 
+//! # Design
+//! 
+//! # Example
 
 use anyhow::{anyhow, bail, Error};
 use pretty::{Doc, RcDoc};
