@@ -1,6 +1,6 @@
 use crate::{
     bencode::{BDict, BItem},
-    client::Client,
+    client::TClient,
     metainfo::{self, MetaInfo},
 };
 use anyhow::Ok;
@@ -50,13 +50,13 @@ impl Display for Event {
 async fn form_requst_params(
     metainfo: &MetaInfo,
     port: u128,
-    client: &Client,
+    client: &TClient,
     event: Event,
 ) -> String {
-    let downloaded = client.bit_fields.lock().await.len();
-    let left = client.bit_fields.lock().await.left();
+    let downloaded = client.bit_fields.lock().unwrap().len();
+    let left = client.bit_fields.lock().unwrap().left();
 
-    let uploaded = client.uploaded.lock().await.to_string();
+    let uploaded = client.uploaded.lock().unwrap().to_string();
     let port = port.to_string();
     let downloaded = downloaded.to_string();
     let left = left.to_string();
@@ -81,7 +81,7 @@ async fn form_requst_params(
 }
 
 #[instrument]
-async fn request_tracker(url: &str, params: &str, client: &Client) -> anyhow::Result<Vec<Url>> {
+async fn request_tracker(url: &str, params: &str, client: &TClient) -> anyhow::Result<Vec<Url>> {
     let mut url = Url::parse(url)?;
     url.set_query(Some(params));
 
@@ -109,7 +109,7 @@ pub async fn run(
     metainfo: Arc<MetaInfo>,
     port: u128,
     peer_tx: mpsc::Sender<String>,
-    client: Client,
+    client: TClient,
 ) -> anyhow::Result<()> {
     for tracker in metainfo.trackers() {
         let tracker = tracker.to_owned();
@@ -121,7 +121,7 @@ pub async fn run(
             let url = Url::parse(tracker.as_str()).unwrap();
             let mut interval = Duration::from_secs(1800);
 
-            while client.bit_fields.lock().await.left() != 0 {
+            while client.bit_fields.lock().unwrap().left() != 0 {
                 let params = form_requst_params(&*metainfo, port, &client, Event::Started).await;
                 let mut url = url.clone();
                 url.set_query(Some(params.as_str()));

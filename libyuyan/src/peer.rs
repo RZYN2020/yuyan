@@ -4,7 +4,7 @@ use tokio::{io::AsyncWriteExt, net::TcpStream, sync::{
 }};
 use tracing::info;
 
-use crate::{bitmap::Bitmap, client::Client};
+use crate::{bitmap::Bitmap, client::TClient};
 
 #[derive(Debug)]
 struct Peer {
@@ -57,14 +57,14 @@ enum Message {
 pub async fn run(
     addr: String,
     permit: OwnedSemaphorePermit,
-    client: Client,
+    client: TClient,
     piece_tx: broadcast::Sender<usize>,
     piece_rx: broadcast::Receiver<usize>,
     data_tx: mpsc::Sender<(usize, Vec<u8>)>,
 ) {
     info!("running peer: {}", addr.to_string());
-
-    let peer = Peer::new(addr, client.bit_fields.lock().await.size()).await;
+    let size = client.bit_fields.lock().unwrap().size();
+    let peer = Peer::new(addr, size).await;
 
     // todo: drop permit when existing
 
@@ -88,4 +88,5 @@ pub async fn run(
     //    4. put it into data channel
 
     drop(permit);
+    unimplemented!()
 }

@@ -4,13 +4,13 @@ use std::sync::Arc;
 
 use tokio::sync::{mpsc, Mutex};
 
-use crate::{bitmap::Bitmap, client::Client, metainfo::MetaInfo};
+use crate::{bitmap::Bitmap, client::TClient, metainfo::MetaInfo};
 
 pub async fn run(
     metainfo: Arc<MetaInfo>,
     dir: String,
     data_rx: mpsc::Receiver<(usize, Vec<u8>)>,
-    client: Client,
+    client: TClient,
 ) -> anyhow::Result<()> {
     Ok(())
 }

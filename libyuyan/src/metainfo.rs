@@ -1,4 +1,4 @@
-//! Metainfo File Structure (.torrent file)r
+//! Metainfo File Structure (.torrent file)
 
 use crate::bencode::{BDict, BItem};
 use sha1::{Digest, Sha1};
